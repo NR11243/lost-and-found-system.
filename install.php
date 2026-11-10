@@ -1,0 +1,11 @@
+<?php
+require_once __DIR__.'/db.php';require_once __DIR__.'/functions.php';
+$message='';$done=false;
+if($_SERVER['REQUEST_METHOD']==='POST'){
+ $username=trim($_POST['username']??'');$password=$_POST['password']??'';$confirm=$_POST['confirm']??'';
+ if(!preg_match('/^[A-Za-z0-9_.-]{4,80}$/',$username))$message='Username must be 4–80 characters and use letters, numbers, dot, underscore, or hyphen.';
+ elseif(strlen($password)<10)$message='Use an administrator password with at least 10 characters.';
+ elseif($password!==$confirm)$message='Passwords do not match.';
+ else{ $sql=file_get_contents(__DIR__.'/schema.sql');foreach(array_filter(array_map('trim',explode(';',$sql))) as $statement)$conn->query($statement);$hash=password_hash($password,PASSWORD_DEFAULT);$stmt=$conn->prepare('INSERT INTO admins(username,password_hash) VALUES(?,?)');$stmt->bind_param('ss',$username,$hash);$stmt->execute();$message='Administrator created. Delete or rename install.php after setup.';$done=true;}
+}
+?><!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Install Lost &amp; Found</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/dashboard-theme.css"><style>.wrap{max-width:480px;margin:8vh auto;padding:20px}.panel{padding:26px}.notice{margin:12px 0;color:#9cf0d0}</style></head><body><main class="wrap"><section class="panel"><p class="eyebrow">INITIAL SETUP</p><h1>Create administrator</h1><p class="muted">Import schema and create the first administrator account.</p><?php if($message):?><p class="<?=$done?'notice':'muted'?>"><?=e($message)?></p><?php endif;?><form method="post"><label>Username</label><input name="username" required minlength="4"><label style="margin-top:12px">Password (10+ characters)</label><input type="password" name="password" required minlength="10"><label style="margin-top:12px">Confirm password</label><input type="password" name="confirm" required minlength="10"><button class="btn primary full">Create administrator</button></form><p class="muted small">After setup, remove install.php from the server.</p></section></main></body></html>

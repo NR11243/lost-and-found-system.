@@ -1,0 +1,1 @@
+<?php require_once __DIR__.'/functions.php'; unset($_SESSION['access_code_id']); session_regenerate_id(true); header('Location: index.php'); exit;
